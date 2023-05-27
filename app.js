@@ -1,6 +1,7 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const express = require('express');
+const Table = require('cli-table3');
 require('dotenv').config();
 const {Employee, Role, Department} = require('./lib/levels.js');
 
@@ -74,15 +75,28 @@ const taskList = {
 function displayMainMenu() {
   inquirer.prompt(taskList).then((answer) => {
     if (answer.task === 'View all departments') {
-      db.query('SELECT id, department_name FROM departments', function (err, results) {
+      db.query('SELECT id, department_name FROM departments', function (err, departments) {
         if (err) {
           console.error(err);
           return;
         }
-        console.table(results);
+        
+      // Create a new table instance
+        const table = new Table({
+          head: ['Department ID', 'Department Name'],
+        });
+  
+      // Add rows to the table
+        departments.forEach((department) => {
+          table.push([department.id, department.department_name]);
+        });
+  
+      // Display the formatted table
+        console.log(table.toString());
         displayMainMenu();
-      });
-    }
+        });
+      }
+
     else if (answer.task === 'View all roles') {
       console.log(answer.task);
       displayMainMenu();
