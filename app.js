@@ -73,6 +73,12 @@ const taskList = {
             'Exit'],
 };
 
+const addDept = {
+  type: 'input',
+  message: 'What is the name of the new department?',
+  name: 'newDept'
+};
+
 function displayMainMenu() {
   inquirer.prompt(taskList).then((answer) => {
     if (answer.task === 'View all departments') {
@@ -145,8 +151,19 @@ function displayMainMenu() {
     }
 
     else if (answer.task === 'Add a department') {
-      console.log(answer.task);
-      displayMainMenu();
+      inquirer.prompt(addDept).then((response) => {
+        if(addDept) {
+          db.query(`INSERT INTO departments(department_name) VALUES("${response.newDept}");`,
+          function (err) {
+            if (err) {
+              console.error(err);
+              return;
+            } 
+          console.log(`${response.newDept} was successfully added to the department list!`)
+          displayMainMenu();
+          });
+        };
+      });
     }
 
     else if (answer.task === 'Add a role') {
