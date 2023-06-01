@@ -189,7 +189,7 @@ function displayMainMenu() {
               type: 'list',
               name: 'department',
               message: 'What department should the new role belong to?',
-              choices: departments.map((department) => department.department_name),
+              choices: departments.map((department) => department.department_name)
             }
           ]
         ).then((input) => {
@@ -210,12 +210,70 @@ function displayMainMenu() {
     }
 
     else if (answer.task === 'Add an employee') {
-      console.log(answer.task);
-      displayMainMenu();
+      db.query('SELECT * FROM roles', (err, roles) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        
+        db.query('SELECT employees.id, CONCAT(employees.first_name, " ", employees.last_name) AS manager FROM employees', (err, mgr) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+        
+          inquirer.prompt(
+            [
+              {
+                type: 'input',
+                message: 'What is the first name of the new employee?',
+                name: 'first_name',
+              },
+              {
+                type: 'input',
+                message: 'What is the last name of the new employee?',
+                name: 'last_name',
+              },
+              {
+                type: 'list',
+                message: 'What is the role title of the new employee?',
+                name: 'role',
+                choices: roles.map((role) => role.title)
+              },
+              {
+                type: 'list',
+                message: "Who is the new employee's manager?",
+                name: 'manager',
+                choices: mgr.map((empMgr) => empMgr.manager)
+              }
+            ]
+          ).then((newEmp) => {
+            const roleId = roles.find(role => role.title === newEmp.role).id;
+            const emp = newEmp.first_name + " " + newEmp.last_name;
+            db.query('SELECT employees.id FROM employees WHERE CONCAT(employees.first_name, " ", employees.last_name) = ?', [newEmp.manager],
+            function (err, managerId) {
+              if (err) {
+                console.log(err);
+              }
+              const mgrId = managerId[0].id;  
+  
+              db.query(`INSERT INTO employees(first_name, last_name, role_id, manager_id) VALUES("${newEmp.first_name}", "${newEmp.last_name}", "${roleId}", "${mgrId}");`,
+              function (err) {
+                if (err) {
+                  console.error(err);
+                  return;
+                } 
+                console.log(`${emp} was successfully added to the employee list!`)
+                displayMainMenu();
+              });
+            });  
+          });  
+        });
+      }); 
     }
 
     else if (answer.task === 'Update an employee role') {
-      console.log(answer.task);
+      
       displayMainMenu();
     }
 
