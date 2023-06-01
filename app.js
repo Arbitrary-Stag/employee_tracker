@@ -167,9 +167,48 @@ function displayMainMenu() {
     }
 
     else if (answer.task === 'Add a role') {
-      console.log(answer.task);
-      displayMainMenu();
+      db.query('SELECT * FROM departments', (err, departments) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+    
+        inquirer.prompt(
+          [
+            {
+              type: 'input',
+              message: 'What is the title of the new role?',
+              name: 'title'
+            },
+            {
+              type: 'input',
+              message: 'What is the salary of the new role?',
+              name: 'salary'
+            },
+            {
+              type: 'list',
+              name: 'department',
+              message: 'What department should the new role belong to?',
+              choices: departments.map((department) => department.department_name),
+            }
+          ]
+        ).then((input) => {
+          const departmentId = departments.find(
+            (department) => department.department_name === input.department
+          ).id;
+          db.query(`INSERT INTO roles(title, salary, department_id) VALUES("${input.title}", "${input.salary}", "${departmentId}");`,
+          function (err) {
+            if (err) {
+              console.error(err);
+              return;
+            } 
+          console.log(`${input.title} was successfully added to the role list!`)
+          displayMainMenu();
+          });
+        });
+      });
     }
+
     else if (answer.task === 'Add an employee') {
       console.log(answer.task);
       displayMainMenu();
