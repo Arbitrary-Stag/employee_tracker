@@ -1,8 +1,11 @@
+-- Boiler plate code
 DROP DATABASE IF EXISTS employee_tracker_db;
 CREATE DATABASE employee_tracker_db;
 
 USE employee_tracker_db;
 
+-- Declared tables and their attributes
+-- All tables primary key's are set to auto increment so no ID's are written in the seeds file
 CREATE TABLE departments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     department_name VARCHAR(30) NOT NULL

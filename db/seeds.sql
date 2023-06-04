@@ -1,3 +1,7 @@
+-- Seeds for the three declared tables,
+-- Note that primary key, id, is not included in the seed
+-- as auto increment is being utilized 
+
 INSERT INTO departments (department_name)
 VALUES ("Bakery"),
        ("Cafe"),

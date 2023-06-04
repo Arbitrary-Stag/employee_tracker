@@ -1,3 +1,4 @@
+// Declared variables and boiler plate code //
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const express = require('express');
@@ -34,7 +35,7 @@ db.connect((err) => {
   displayMainMenu();
 });
 
-// ASCII art logo
+// Logo Art
 const logo = `
 .___________________________________________________________.
 |      ______                 _                             |             
@@ -59,6 +60,7 @@ function displayLogo() {
   console.log(logo);
 }
 
+// Main menu list
 const taskList = {
   type: 'list',
   message: 'What would you like to do?',
@@ -73,14 +75,20 @@ const taskList = {
             'Exit'],
 };
 
+// Prompt for add a department selection
 const addDept = {
   type: 'input',
   message: 'What is the name of the new department?',
   name: 'newDept'
 };
 
+// The BIG BOY, this function is the parent element of all the rest of the app's code
 function displayMainMenu() {
+  // Inquirer uses the variable taskList to display the main menu
   inquirer.prompt(taskList).then((answer) => {
+    // Depending on the selection chosen by the user, diffferent portions of this function are called
+
+    // View all departments choice
     if (answer.task === 'View all departments') {
       db.query('SELECT id, department_name FROM departments', function (err, departments) {
         if (err) {
@@ -88,22 +96,24 @@ function displayMainMenu() {
           return;
         }
         
-      // Create a new table instance
+      // Creates a new table instance
         const table = new Table({
           head: ['Department ID'.white, 'Department Name'.blue],
         });
   
-      // Add rows to the table
+      // Adds rows to the table
         departments.forEach((department) => {
           table.push([department.id, department.department_name]);
         });
   
-      // Display the formatted table
+      // Displays the formatted table
         console.log(table.toString());
+      // Re-calls the parent function, which begins by re-displaying the main menu  
         displayMainMenu();
         });
       }
 
+      // View all roles choice
     else if (answer.task === 'View all roles') {
       db.query('SELECT roles.id, roles.title, roles.salary, departments.department_name AS department FROM roles INNER JOIN departments ON roles.department_id = departments.id', function (err, roles) {
         if (err) {
@@ -111,22 +121,24 @@ function displayMainMenu() {
           return;
         }
         
-      // Create a new table instance
+      // Creates a new table instance
         const table = new Table({
           head: ['Role ID'.white, 'Role Title'.yellow, 'Role Salary'.green, 'Department'.blue],
         });
   
-      // Add rows to the table
+      // Adds rows to the table
         roles.forEach((role) => {
           table.push([role.id, role.title, role.salary, role.department]);
         });
   
-      // Display the formatted table
+      // Displays the formatted table
         console.log(table.toString());
+      // Re-calls the parent function, which begins by re-displaying the main menu  
         displayMainMenu();
         });
     }
 
+      // View all employees choice
     else if (answer.task === 'View all employees') {
       db.query('SELECT e.id, e.first_name, e.last_name, e.role_id, e.manager_id, CONCAT(m.first_name, " ", m.last_name) AS manager, roles.id AS role_id, roles.title AS role, roles.salary AS salary, roles.department_id, departments.department_name AS department FROM employees AS e LEFT JOIN employees AS m ON e.manager_id = m.id LEFT JOIN roles ON e.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id', function (err, employees) {
         if (err) {
@@ -134,25 +146,29 @@ function displayMainMenu() {
           return;
         }
         
-      // Create a new table instance
+      // Creates a new table instance
         const table = new Table({
           head: ['Employee ID'.white, 'First Name'.magenta, 'Last Name'.magenta, 'Title'.yellow, 'Salary'.green, 'Department'.blue, 'Manager'.red],
         });
   
-      // Add rows to the table
+      // Adds rows to the table
         employees.forEach((employee) => {
           table.push([employee.id, employee.first_name, employee.last_name, employee.role, employee.salary, employee.department, employee.manager]);
         });
   
-      // Display the formatted table
+      // Displays the formatted table
         console.log(table.toString());
+      // Re-calls the parent function, which begins by re-displaying the main menu
         displayMainMenu();
         });
     }
 
+      // Add a department choice
     else if (answer.task === 'Add a department') {
+      // calls the unique addDept prompt
       inquirer.prompt(addDept).then((response) => {
         if(addDept) {
+          // Inserts the departments information into the database
           db.query(`INSERT INTO departments(department_name) VALUES("${response.newDept}");`,
           function (err) {
             if (err) {
@@ -160,19 +176,21 @@ function displayMainMenu() {
               return;
             } 
           console.log(`${response.newDept} was successfully added to the department list!`)
+        // Re-calls the parent function, which begins by re-displaying the main menu
           displayMainMenu();
           });
         };
       });
     }
 
+      // Add a role choice
     else if (answer.task === 'Add a role') {
       db.query('SELECT * FROM departments', (err, departments) => {
         if (err) {
           console.error(err);
           return;
         }
-    
+      // Prompts the user for information regarding the new role
         inquirer.prompt(
           [
             {
@@ -196,6 +214,7 @@ function displayMainMenu() {
           const departmentId = departments.find(
             (department) => department.department_name === input.department
           ).id;
+          // Inserts the new roles information into the database
           db.query(`INSERT INTO roles(title, salary, department_id) VALUES("${input.title}", "${input.salary}", "${departmentId}");`,
           function (err) {
             if (err) {
@@ -203,12 +222,14 @@ function displayMainMenu() {
               return;
             } 
           console.log(`${input.title} was successfully added to the role list!`)
+        // Re-calls the parent function, which begins by re-displaying the main menu
           displayMainMenu();
           });
         });
       });
     }
 
+      // Add an employee choice
     else if (answer.task === 'Add an employee') {
       db.query('SELECT * FROM roles', (err, roles) => {
         if (err) {
@@ -222,6 +243,7 @@ function displayMainMenu() {
             return;
           }
         
+          // Prompts the user for information about the new employee
           inquirer.prompt(
             [
               {
@@ -256,7 +278,7 @@ function displayMainMenu() {
                 console.log(err);
               }
               const mgrId = managerId[0].id;  
-  
+              // Inserts the new employees information into the database
               db.query(`INSERT INTO employees(first_name, last_name, role_id, manager_id) VALUES("${newEmp.first_name}", "${newEmp.last_name}", "${roleId}", "${mgrId}");`,
               function (err) {
                 if (err) {
@@ -264,6 +286,7 @@ function displayMainMenu() {
                   return;
                 } 
                 console.log(`${emp} was successfully added to the employee list!`)
+              // Re-calls the parent function, which begins by re-displaying the main menu
                 displayMainMenu();
               });
             });  
@@ -272,6 +295,7 @@ function displayMainMenu() {
       }); 
     }
 
+      // Update an employee choice
     else if (answer.task === 'Update an employee role') {
       db.query('SELECT * FROM roles', (err, titles) => {
         if (err) {
@@ -284,7 +308,7 @@ function displayMainMenu() {
             console.error(err);
             return;
           }
-
+        // Prompts the user for information about the employee who's role they wish to update  
           inquirer.prompt([
             {
               type: 'list',
@@ -307,6 +331,7 @@ function displayMainMenu() {
                 console.log(err);
               }
               const targetEmpId = empId[0].id;  
+              // Updates the employee table in the database with the selected employee's new role
               db.query("UPDATE employees SET role_id = ? WHERE id = ?;", [roleId, targetEmpId],
               function (err) {
                 if (err) {
@@ -314,6 +339,7 @@ function displayMainMenu() {
                   return;
                 } 
                 console.log(`${choices.target_emp}'s role was successfully updated to ${choices.new_role}!`)
+              // Re-calls the parent function, which begins by re-displaying the main menu
                 displayMainMenu();
               });  
             });  
@@ -322,14 +348,10 @@ function displayMainMenu() {
       });
     }
 
+    // This selection closes the application and sends a thank you message for using the app
     else if (answer.task === 'Exit') {
       console.log('Thank you for using the Employee Management App!');
       process.exit(1);
     }
   });
 };
-
-app.use((req, res) => {
-  res.status(404).end();
-});
-
