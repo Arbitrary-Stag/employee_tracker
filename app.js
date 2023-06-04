@@ -273,8 +273,53 @@ function displayMainMenu() {
     }
 
     else if (answer.task === 'Update an employee role') {
+      db.query('SELECT * FROM roles', (err, titles) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
       
-      displayMainMenu();
+        db.query('SELECT employees.id, CONCAT(employees.first_name, " ", employees.last_name) AS emp_name FROM employees', (err, emps) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+
+          inquirer.prompt([
+            {
+              type: 'list',
+              name: 'target_emp',
+              message: "Please select the name of the employee who's role you wish to update.",
+              choices: emps.map((names) => names.emp_name)
+            },
+            {
+              type: 'list',
+              name: 'new_role',
+              message: "Please select the new role you wish to assign this employee.",
+              choices: titles.map((title) => title.title)
+            }
+          ])
+          .then((choices) => {
+            const roleId = titles.find(title => title.title === choices.new_role).id;
+            db.query('SELECT employees.id FROM employees WHERE CONCAT(employees.first_name, " ", employees.last_name) = ?', [choices.target_emp],
+            function (err, empId) {
+              if (err) {
+                console.log(err);
+              }
+              const targetEmpId = empId[0].id;  
+              db.query("UPDATE employees SET role_id = ? WHERE id = ?;", [roleId, targetEmpId],
+              function (err) {
+                if (err) {
+                  console.error(err);
+                  return;
+                } 
+                console.log(`${choices.target_emp}'s role was successfully updated to ${choices.new_role}!`)
+                displayMainMenu();
+              });  
+            });  
+          });
+        });
+      });
     }
 
     else if (answer.task === 'Exit') {
